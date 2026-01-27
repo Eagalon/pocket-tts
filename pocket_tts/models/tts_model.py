@@ -189,8 +189,8 @@ class TTSModel(nn.Module):
         with the specified generation parameters and ready for inference.
 
         Args:
-            variant: Model variant identifier corresponding to a config file name
-                (e.g., '610b0b2c'). Must match a YAML file in the config directory.
+            variant: Model variant identifier (e.g., '610b0b2c'; must match a YAML file in the config directory)
+                or a path to a custom YAML config file saved locally (e.g., C://pocket_tts/pocket_tts_config.yaml).
             temp: Sampling temperature for generation. Higher values produce more
                 diverse but potentially lower quality output.
             lsd_decode_steps: Number of steps for Lagrangian Self Distillation
@@ -209,7 +209,12 @@ class TTSModel(nn.Module):
                 are not found.
             ValueError: If the configuration is invalid or incompatible.
         """
-        config = load_config(Path(__file__).parents[1] / f"config/{variant}.yaml")
+        if str(variant).endswith(".yaml"):
+            config_path = Path(variant)
+            config = load_config(config_path)
+            logger.info(f"Loading model from config at {config_path}...")
+        else:
+            config = load_config(Path(__file__).parents[1] / f"config/{variant}.yaml")
         tts_model = TTSModel._from_pydantic_config_with_weights(
             config, temp, lsd_decode_steps, noise_clamp, eos_threshold
         )
